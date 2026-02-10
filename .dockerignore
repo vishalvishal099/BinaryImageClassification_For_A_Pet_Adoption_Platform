@@ -1,0 +1,60 @@
+# =============================================================================
+# Docker Ignore File
+# =============================================================================
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+*.egg-info/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints
+
+# MLflow (keep models, exclude tracking)
+mlruns/
+
+# Data (will be mounted)
+data/raw/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# CI/CD configs (not needed in container)
+.github/
+k8s/
+
+# Development files
+*.log
+.env
+.env.*
+!.env.example
+
+# DVC
+.dvc/cache/
+
+# Notebooks
+notebooks/

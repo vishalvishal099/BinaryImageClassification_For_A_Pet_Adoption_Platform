@@ -1,0 +1,41 @@
+# DVC Pipeline Definition
+# =============================================================================
+
+stages:
+  # Data Preprocessing Stage
+  preprocess:
+    cmd: python src/data/preprocess.py --raw-dir data/raw --processed-dir data/processed
+    deps:
+      - src/data/preprocess.py
+      - data/raw
+    outs:
+      - data/processed
+
+  # Model Training Stage
+  train:
+    cmd: python src/training/train.py --config configs/train_config.yaml --data-dir data/processed
+    deps:
+      - src/training/train.py
+      - src/models/cnn.py
+      - src/data/dataset.py
+      - data/processed
+      - configs/train_config.yaml
+    outs:
+      - models/best_model.pt
+    metrics:
+      - models/metrics.json:
+          cache: false
+    plots:
+      - models/confusion_matrix.npy:
+          cache: false
+
+  # Model Evaluation Stage
+  evaluate:
+    cmd: python scripts/evaluate.py --model-path models/best_model.pt --data-dir data/processed
+    deps:
+      - scripts/evaluate.py
+      - models/best_model.pt
+      - data/processed/test
+    metrics:
+      - reports/evaluation_metrics.json:
+          cache: false

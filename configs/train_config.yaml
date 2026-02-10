@@ -1,0 +1,47 @@
+# Training Configuration for Cats vs Dogs Classification
+# ========================================================
+
+# Model Configuration
+model_name: "simple_cnn"  # Options: simple_cnn, improved_cnn, resnet18
+num_classes: 2
+dropout_rate: 0.5
+
+# Data Configuration
+data_dir: "data/processed"
+batch_size: 32
+num_workers: 4
+
+# Training Configuration
+num_epochs: 20
+learning_rate: 0.001
+weight_decay: 0.0001
+optimizer: "adam"  # Options: adam, sgd
+
+# Learning Rate Scheduler
+scheduler:
+  name: "reduce_on_plateau"
+  factor: 0.5
+  patience: 3
+
+# Data Augmentation (applied in preprocessing)
+augmentation:
+  horizontal_flip: true
+  rotation: 15
+  brightness: 0.2
+  contrast: 0.2
+
+# MLflow Configuration
+mlflow:
+  experiment_name: "cats_dogs_classification"
+  tracking_uri: "mlruns"
+
+# Checkpointing
+checkpoint:
+  save_dir: "models"
+  save_best_only: true
+  monitor: "val_accuracy"
+
+# Logging
+logging:
+  level: "INFO"
+  log_every_n_steps: 10

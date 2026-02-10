@@ -1,0 +1,15 @@
+# =============================================================================
+# Kubernetes ConfigMap for Application Configuration
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cats-dogs-classifier-config
+  namespace: cats-dogs-classifier
+  labels:
+    app: cats-dogs-classifier
+data:
+  LOG_LEVEL: "INFO"
+  MODEL_PATH: "/app/models/best_model.pt"
+  PORT: "8000"
+  PYTHONUNBUFFERED: "1"
