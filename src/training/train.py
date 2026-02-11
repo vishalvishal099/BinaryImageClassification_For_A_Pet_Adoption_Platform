@@ -132,8 +132,7 @@ class Trainer:
             self.optimizer,
             mode='min',
             factor=0.5,
-            patience=3,
-            verbose=True
+            patience=3
         )
         
     def train_epoch(self) -> Tuple[float, float]:

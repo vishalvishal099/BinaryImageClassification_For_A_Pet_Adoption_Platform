@@ -9,7 +9,7 @@ dropout_rate: 0.5
 # Data Configuration
 data_dir: "data/processed"
 batch_size: 32
-num_workers: 4
+num_workers: 0  # Set to 0 to avoid shared memory issues on macOS
 
 # Training Configuration
 num_epochs: 20

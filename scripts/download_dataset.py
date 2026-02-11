@@ -2,41 +2,25 @@
 """
 Dataset Download Script.
 
-Downloads the Cats and Dogs classification dataset from Kaggle.
-Requires kaggle API credentials to be configured.
+Downloads the Cats and Dogs classification dataset from Kaggle using kagglehub.
 """
 
 import os
 import sys
-import zipfile
 import shutil
 from pathlib import Path
 import argparse
-
-try:
-    from kaggle.api.kaggle_api_extended import KaggleApi
-    KAGGLE_AVAILABLE = True
-except ImportError:
-    KAGGLE_AVAILABLE = False
+import kagglehub
 
 
 def download_from_kaggle(output_dir: str, dataset: str = "bhavikjikadara/dog-and-cat-classification-dataset"):
     """
-    Download dataset from Kaggle.
+    Download dataset from Kaggle using kagglehub.
     
     Args:
         output_dir: Directory to save the dataset
         dataset: Kaggle dataset identifier
     """
-    if not KAGGLE_AVAILABLE:
-        print("Error: kaggle package not installed.")
-        print("Install with: pip install kaggle")
-        print("\nAlso ensure you have your Kaggle API credentials configured:")
-        print("1. Go to https://www.kaggle.com/settings")
-        print("2. Create a new API token")
-        print("3. Place kaggle.json in ~/.kaggle/")
-        return False
-    
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -44,15 +28,30 @@ def download_from_kaggle(output_dir: str, dataset: str = "bhavikjikadara/dog-and
     print(f"Output directory: {output_path}")
     
     try:
-        api = KaggleApi()
-        api.authenticate()
+        # Download using kagglehub
+        path = kagglehub.dataset_download(dataset)
+        print(f"Dataset downloaded to: {path}")
         
-        # Download dataset
-        api.dataset_download_files(
-            dataset,
-            path=str(output_path),
-            unzip=True
-        )
+        source_path = Path(path)
+        
+        # Show dataset contents
+        print(f"\nDataset contents:")
+        for item in source_path.rglob("*"):
+            if item.is_file():
+                print(f"  {item.relative_to(source_path)}")
+        
+        # Copy the dataset to our data/raw directory
+        if source_path.exists():
+            for item in source_path.iterdir():
+                dest = output_path / item.name
+                if item.is_dir():
+                    if dest.exists():
+                        shutil.rmtree(dest)
+                    shutil.copytree(item, dest)
+                    print(f"Copied directory: {item.name}")
+                else:
+                    shutil.copy2(item, dest)
+                    print(f"Copied file: {item.name}")
         
         print("Download complete!")
         return True
