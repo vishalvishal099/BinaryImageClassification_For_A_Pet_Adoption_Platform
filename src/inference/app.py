@@ -371,9 +371,110 @@ async def root():
             "health": "/health",
             "predict": "/predict",
             "metrics": "/metrics",
+            "artifacts": "/artifacts/compare",
             "docs": "/docs",
         },
     }
+
+
+class ArtifactInfo(BaseModel):
+    """Artifact information model."""
+
+    image: str
+    image_id: str
+    status: str
+    created: Optional[str] = None
+    size: Optional[str] = None
+    digest: Optional[str] = None
+
+
+class ArtifactComparisonResponse(BaseModel):
+    """Artifact comparison response model."""
+
+    local: ArtifactInfo
+    registry: ArtifactInfo
+    comparison: Dict[str, Any]
+    timestamp: str
+
+
+@app.get("/artifacts/compare", response_model=ArtifactComparisonResponse, tags=["Artifacts"])
+async def compare_artifacts():
+    """
+    Compare local running artifact with GitHub Container Registry artifact.
+    
+    Returns detailed information about both artifacts and whether they match.
+    """
+    # Get local container info
+    local_info = {
+        "image": "unknown",
+        "image_id": "unknown",
+        "status": "unknown",
+        "created": None,
+        "size": None,
+        "digest": None,
+    }
+    
+    # Try to get info from environment variables (passed at runtime or build time)
+    container_image = os.environ.get("CONTAINER_IMAGE", "localhost/cats-dogs-classifier:latest")
+    build_timestamp = os.environ.get("BUILD_TIMESTAMP", datetime.utcnow().isoformat())
+    git_sha = os.environ.get("GIT_SHA", "unknown")
+    local_image_id = os.environ.get("LOCAL_IMAGE_ID", "unknown")
+    image_tag = os.environ.get("IMAGE_TAG", "latest")
+    
+    # Populate local info from environment
+    local_info["image"] = container_image
+    local_info["image_id"] = local_image_id[:12] if local_image_id and local_image_id != "unknown" else "unknown"
+    local_info["created"] = build_timestamp
+    local_info["status"] = "running (in-container)"
+    
+    # Get registry info
+    registry_image = os.environ.get(
+        "REGISTRY_IMAGE",
+        "ghcr.io/vishalvishal099/binaryimageclassification_for_a_pet_adoption_platform:latest"
+    )
+    registry_image_id = os.environ.get("REGISTRY_IMAGE_ID", "N/A")
+    
+    registry_info = {
+        "image": registry_image,
+        "image_id": registry_image_id[:12] if registry_image_id and registry_image_id != "N/A" else "N/A",
+        "status": "available",
+        "created": None,
+        "size": None,
+        "digest": None,
+    }
+    
+    # Compare artifacts
+    same_image = local_info["image_id"] == registry_info["image_id"] and local_info["image_id"] != "unknown"
+    same_digest = (
+        local_info["digest"] == registry_info["digest"] 
+        and local_info["digest"] is not None
+    )
+    
+    comparison = {
+        "match": same_image or same_digest,
+        "local_id": local_info["image_id"],
+        "registry_id": registry_info["image_id"],
+        "git_sha": git_sha,
+        "recommendation": (
+            "✅ Artifacts are in sync!"
+            if (same_image or same_digest)
+            else "⚠️ Artifacts differ - consider updating local or pushing new build"
+        ),
+    }
+    
+    logger.info(
+        "artifact_comparison",
+        local_id=local_info["image_id"],
+        registry_id=registry_info["image_id"],
+        match=comparison["match"],
+    )
+    
+    return ArtifactComparisonResponse(
+        local=ArtifactInfo(**local_info),
+        registry=ArtifactInfo(**registry_info),
+        comparison=comparison,
+        timestamp=datetime.utcnow().isoformat(),
+    )
 
 
 if __name__ == "__main__":

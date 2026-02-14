@@ -56,6 +56,14 @@ ENV PYTHONUNBUFFERED=1
 ENV MODEL_PATH=/app/models/best_model.pt
 ENV PORT=8000
 
+# Build metadata (can be overridden at build time)
+ARG BUILD_TIMESTAMP=""
+ARG GIT_SHA=""
+ARG IMAGE_TAG="latest"
+ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+ENV GIT_SHA=${GIT_SHA}
+ENV IMAGE_TAG=${IMAGE_TAG}
+
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
 
