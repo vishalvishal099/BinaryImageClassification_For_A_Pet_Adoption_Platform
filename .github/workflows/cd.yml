@@ -117,12 +117,13 @@ jobs:
       - name: Run smoke tests
         run: |
           python scripts/smoke_test.py --url ${{ steps.get-url.outputs.SERVICE_URL }}
-        continue-on-error: true
+        # Smoke tests MUST pass - no continue-on-error
       
       - name: Report smoke test results
         if: failure()
         run: |
           echo "::error::Smoke tests failed! Please check the deployment."
+          exit 1
 
   # ==========================================================================
   # Notify on Completion
