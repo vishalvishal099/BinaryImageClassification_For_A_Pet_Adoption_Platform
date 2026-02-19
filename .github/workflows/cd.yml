@@ -6,8 +6,11 @@
 name: CD Pipeline
 
 on:
-  push:
+  # Only run CD after CI Pipeline succeeds on main
+  workflow_run:
+    workflows: ["CI Pipeline"]
     branches: [main]
+    types: [completed]
   workflow_dispatch:
     inputs:
       environment:
@@ -30,6 +33,7 @@ jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: ${{ github.event.inputs.environment || 'staging' }}
     
     steps:
@@ -62,20 +66,18 @@ jobs:
       
       - name: Update image tag in manifests
         run: |
-          cd k8s
-          # Update the image tag in deployment manifest
-          sed -i "s|IMAGE_TAG|${{ github.sha }}|g" deployment.yaml
-          sed -i "s|IMAGE_REGISTRY|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" deployment.yaml
-          cat deployment.yaml
+          # Manifests live in k8s/local/ - pin image to exact commit SHA
+          sed -i "s|ghcr.io/${{ env.IMAGE_NAME }}:latest|ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}|g" k8s/local/deployment.yaml
+          echo "=== Updated image tag ==="
+          grep "image:" k8s/local/deployment.yaml
       
       - name: Apply Kubernetes manifests
         if: steps.check-kube.outputs.has_kube == 'true'
         run: |
-          kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/configmap.yaml
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-          kubectl apply -f k8s/hpa.yaml || true
+          kubectl apply -f k8s/local/namespace.yaml
+          kubectl apply -f k8s/local/configmap.yaml
+          kubectl apply -f k8s/local/deployment.yaml
+          kubectl apply -f k8s/local/service.yaml
       
       - name: Wait for deployment rollout
         if: steps.check-kube.outputs.has_kube == 'true'
@@ -125,34 +127,59 @@ jobs:
           python-version: '3.10'
       
       - name: Install test dependencies
-        run: pip install requests pytest
+        # Pillow required by smoke_test.py to create synthetic test images
+        run: pip install requests pytest Pillow
       
-      - name: Get service URL
-        id: get-url
+      - name: Configure Kubernetes context for smoke tests
         env:
-          SERVICE_URL_SECRET: ${{ secrets.SERVICE_URL }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
-          if [ -z "$SERVICE_URL_SECRET" ]; then
-            echo "SERVICE_URL=http://localhost:8000" >> $GITHUB_OUTPUT
-            echo "⚠️ SERVICE_URL not set - using localhost for testing"
+          if [ -n "$KUBE_CONFIG" ]; then
+            mkdir -p $HOME/.kube
+            echo "$KUBE_CONFIG" | base64 -d > $HOME/.kube/config
+            chmod 600 $HOME/.kube/config
+            echo "has_kube=true" >> $GITHUB_ENV
           else
-            echo "SERVICE_URL=$SERVICE_URL_SECRET" >> $GITHUB_OUTPUT
+            echo "has_kube=false" >> $GITHUB_ENV
           fi
-      
-      - name: Run smoke tests (skip if no URL)
-        continue-on-error: true
+
+      - name: Port-forward service for smoke tests
+        if: env.has_kube == 'true'
         run: |
-          if [ "${{ steps.get-url.outputs.SERVICE_URL }}" != "http://localhost:8000" ]; then
-            python scripts/smoke_test.py --url ${{ steps.get-url.outputs.SERVICE_URL }}
+          kubectl port-forward svc/cats-dogs-classifier 8000:8000 -n cats-dogs-classifier &
+          echo $! > /tmp/pf.pid
+          for i in $(seq 1 15); do
+            sleep 2
+            curl -sf http://localhost:8000/health > /dev/null 2>&1 && echo "Service ready" && break || echo "  Attempt $i/15"
+          done
+
+      - name: Run smoke tests
+        # smoke_test.py exits 1 on failure - this WILL fail the pipeline
+        env:
+          SERVICE_URL: ${{ secrets.SERVICE_URL }}
+        run: |
+          if [ -n "$SERVICE_URL" ]; then
+            TARGET_URL="$SERVICE_URL"
+          elif [ "$has_kube" = "true" ]; then
+            TARGET_URL="http://localhost:8000"
           else
-            echo "ℹ️ Skipping smoke tests - no deployed service URL configured"
-            echo "   Set SERVICE_URL secret to enable smoke tests"
+            echo "WARNING: No KUBE_CONFIG or SERVICE_URL secret set - smoke tests skipped"
+            exit 0
           fi
-      
-      - name: Report smoke test results
+          echo "Running smoke tests against: $TARGET_URL"
+          python scripts/smoke_test.py --url "$TARGET_URL" --wait --max-attempts 20
+
+      - name: Cleanup port-forward
+        if: always()
+        run: |
+          [ -f /tmp/pf.pid ] && kill "$(cat /tmp/pf.pid)" 2>/dev/null || true
+
+      - name: Report smoke test failure
         if: failure()
         run: |
-          echo "::warning::Smoke tests were skipped or failed"
+          echo "::error::Smoke tests FAILED - deployment is unhealthy!"
+          echo "::error::Check logs: kubectl logs -l app=cats-dogs-classifier -n cats-dogs-classifier"
+          exit 1
 
   # ==========================================================================
   # Notify on Completion
@@ -165,7 +192,7 @@ jobs:
     
     steps:
       - name: Deployment Success
-        if: needs.deploy.result == 'success'
+        if: ${{ needs.deploy.result == 'success' && needs.smoke-tests.result == 'success' }}
         run: |
           echo "✅ Deployment pipeline completed successfully!"
           echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"

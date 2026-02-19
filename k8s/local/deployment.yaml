@@ -34,10 +34,10 @@ spec:
     spec:
       containers:
         - name: classifier
-          # Using local image loaded into minikube
-          image: localhost/cats-dogs-classifier:latest
-          # Never pull - use local image
-          imagePullPolicy: Never
+          # Image from GitHub Container Registry - auto-pulled on every deploy
+          image: ghcr.io/vishalvishal099/binaryimageclassification_for_a_pet_adoption_platform:latest
+          # Always pull so ArgoCD / K8s picks up the latest image on every sync
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
               name: http
