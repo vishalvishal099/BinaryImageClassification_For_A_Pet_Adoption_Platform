@@ -1,0 +1,80 @@
+# =============================================================================
+# Deployment for Local K8s (Auto-Pull Latest Image)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cats-dogs-classifier
+  namespace: cats-dogs-classifier
+  labels:
+    app: cats-dogs-classifier
+    version: latest
+  annotations:
+    # Force redeployment when image changes
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cats-dogs-classifier
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: cats-dogs-classifier
+        version: latest
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: classifier
+          # Using local image loaded into minikube
+          image: localhost/cats-dogs-classifier:latest
+          # Never pull - use local image
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: MODEL_PATH
+              value: "/app/models/best_model.pt"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: ENVIRONMENT
+              value: "local-k8s"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      # Pull from GHCR with authentication
+      imagePullSecrets:
+        - name: ghcr-secret
+      terminationGracePeriodSeconds: 30

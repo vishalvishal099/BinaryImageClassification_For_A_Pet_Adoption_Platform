@@ -1,0 +1,20 @@
+# =============================================================================
+# Service for Local K8s Deployment
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: cats-dogs-classifier
+  namespace: cats-dogs-classifier
+  labels:
+    app: cats-dogs-classifier
+spec:
+  type: NodePort
+  selector:
+    app: cats-dogs-classifier
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30080
+      protocol: TCP
+      name: http

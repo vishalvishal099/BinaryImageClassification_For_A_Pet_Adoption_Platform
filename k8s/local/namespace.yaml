@@ -1,0 +1,10 @@
+# =============================================================================
+# Namespace for Local K8s Deployment
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cats-dogs-classifier
+  labels:
+    app: cats-dogs-classifier
+    environment: local

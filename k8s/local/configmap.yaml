@@ -1,0 +1,14 @@
+# =============================================================================
+# ConfigMap for Local K8s Deployment
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cats-dogs-classifier-config
+  namespace: cats-dogs-classifier
+data:
+  MODEL_PATH: "/app/models/best_model.pt"
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "local-k8s"
+  MAX_WORKERS: "2"
+  PYTHONUNBUFFERED: "1"
