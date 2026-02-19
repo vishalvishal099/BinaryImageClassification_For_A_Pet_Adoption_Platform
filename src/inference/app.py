@@ -26,6 +26,13 @@ from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Histogram,
 from pydantic import BaseModel
 from starlette.responses import Response
 
+# Performance tracking (post-deployment model monitoring)
+try:
+    from src.utils.performance_tracker import SimulatedFeedback, get_tracker
+    _performance_tracking_enabled = True
+except ImportError:
+    _performance_tracking_enabled = False
+
 # Configure structured logging
 structlog.configure(
     processors=[
@@ -336,6 +343,21 @@ async def predict(file: UploadFile = File(...)):
             confidence=result["confidence"],
             processing_time_ms=round(processing_time, 2),
         )
+
+        # --- Post-deployment performance tracking ---
+        if _performance_tracking_enabled:
+            try:
+                tracker = get_tracker()
+                ts = tracker.log_prediction(
+                    prediction=result["predicted_class"],
+                    confidence=result["confidence"],
+                    latency_ms=round(processing_time, 2),
+                )
+                # Provide simulated ground truth so metrics can be computed
+                feedback = SimulatedFeedback(accuracy=0.92)
+                feedback.generate_feedback(result["predicted_class"], tracker, ts)
+            except Exception:
+                pass  # Never let tracking errors break the predict endpoint
 
         return PredictionResponse(
             predicted_class=result["predicted_class"],

@@ -80,7 +80,7 @@ class PerformanceTracker:
         latency_ms: float,
         ground_truth: Optional[str] = None,
         metadata: Optional[Dict] = None,
-    ):
+    ) -> str:
         """
         Log a single prediction.
 
@@ -90,10 +90,14 @@ class PerformanceTracker:
             latency_ms: Prediction latency in milliseconds
             ground_truth: Optional ground truth label
             metadata: Optional additional metadata
+
+        Returns:
+            timestamp: ISO timestamp of this record (use with add_ground_truth)
         """
         with self.lock:
+            ts = datetime.utcnow().isoformat()
             record = {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": ts,
                 "prediction": prediction,
                 "confidence": confidence,
                 "latency_ms": latency_ms,
@@ -109,6 +113,8 @@ class PerformanceTracker:
             # Auto-flush if batch is full
             if len(self.predictions) >= self.batch_size:
                 self._compute_and_store_metrics()
+
+            return ts
 
     def add_ground_truth(self, timestamp: str, ground_truth: str):
         """
