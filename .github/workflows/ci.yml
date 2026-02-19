@@ -150,19 +150,7 @@ jobs:
             BUILD_TIMESTAMP=${{ github.event.head_commit.timestamp }}
             GIT_SHA=${{ github.sha }}
       
-      - name: Save Docker image for testing
-        if: github.event_name == 'pull_request'
-        run: |
-          docker build -t test-image:${{ github.sha }} .
-          docker save test-image:${{ github.sha }} > image.tar
-      
-      - name: Upload Docker image artifact
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: image.tar
-          retention-days: 1
+
 
   # ==========================================================================
   # Integration Tests (Docker)
@@ -171,77 +159,155 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: docker-image
-      
-      - name: Load Docker image
-        run: docker load < image.tar
-      
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
       - name: Create dummy model for testing
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu -q
           mkdir -p models
-          # Create a minimal test model file
           python -c "
-          import torch
-          import torch.nn as nn
-          
-          class DummyModel(nn.Module):
+          import torch, torch.nn as nn
+
+          class SimpleCNN(nn.Module):
               def __init__(self):
                   super().__init__()
-                  self.fc = nn.Linear(224*224*3, 2)
+                  self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+                  self.pool  = nn.MaxPool2d(2, 2)
+                  self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
+                  self.fc1   = nn.Linear(32 * 56 * 56, 128)
+                  self.fc2   = nn.Linear(128, 2)
               def forward(self, x):
-                  return torch.randn(x.size(0), 2)
-          
-          model = DummyModel()
-          checkpoint = {
-              'model_state_dict': model.state_dict(),
-              'config': {'model_name': 'simple_cnn'}
-          }
-          torch.save(checkpoint, 'models/best_model.pt')
+                  x = self.pool(torch.relu(self.conv1(x)))
+                  x = self.pool(torch.relu(self.conv2(x)))
+                  x = x.view(x.size(0), -1)
+                  x = torch.relu(self.fc1(x))
+                  return self.fc2(x)
+
+          model = SimpleCNN()
+          torch.save({'model_state_dict': model.state_dict(),
+                      'config': {'model_name': 'simple_cnn'}},
+                     'models/best_model.pt')
+          print('Dummy model created successfully')
           "
-      
+
+      - name: Build Docker image locally
+        run: |
+          docker build -t integration-test-image:${{ github.sha }} .
+
       - name: Run Docker container
         run: |
           docker run -d -p 8000:8000 \
-            -v $(pwd)/models:/app/models \
-            --name test-container \
-            test-image:${{ github.sha }}
-          
-          # Wait for container to be ready
-          sleep 10
-      
+            -e MODEL_PATH=/app/models/best_model.pt \
+            -e ENVIRONMENT=ci-integration \
+            --name integration-container \
+            integration-test-image:${{ github.sha }}
+
+      - name: Wait for container to be ready
+        run: |
+          echo "Waiting for service to start..."
+          for i in {1..20}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Service is ready after ${i} attempts"
+              break
+            fi
+            echo "  Attempt $i: HTTP $STATUS - retrying in 3s..."
+            sleep 3
+          done
+
       - name: Test health endpoint
         run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:8000/health | grep -q "healthy"; then
-              echo "Health check passed!"
-              exit 0
-            fi
-            echo "Waiting for service... attempt $i"
-            sleep 2
-          done
-          echo "Health check failed"
-          exit 1
-      
+          RESPONSE=$(curl -s http://localhost:8000/health)
+          echo "Health response: $RESPONSE"
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          assert data['status'] == 'healthy', f'Expected healthy, got {data[\"status\"]}'
+          assert 'model_loaded' in data, 'Missing model_loaded field'
+          assert 'device' in data, 'Missing device field'
+          print('✅ Health check passed')
+          print(f'   model_loaded: {data[\"model_loaded\"]}')
+          print(f'   device: {data[\"device\"]}')
+          "
+
+      - name: Test root endpoint
+        run: |
+          RESPONSE=$(curl -s http://localhost:8000/)
+          echo "Root response: $RESPONSE"
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          assert 'message' in data or 'status' in data, 'Root endpoint missing expected fields'
+          print('✅ Root endpoint passed')
+          "
+
       - name: Test metrics endpoint
         run: |
-          curl -s http://localhost:8000/metrics | head -20
-      
+          RESPONSE=$(curl -s http://localhost:8000/metrics)
+          echo "$RESPONSE" | head -20
+          echo "$RESPONSE" | grep -q "python_gc_objects_collected_total" || (echo "❌ Missing prometheus metrics" && exit 1)
+          echo "✅ Metrics endpoint passed"
+
+      - name: Test predict endpoint with real image
+        run: |
+          pip install Pillow -q
+          python3 -c "
+          from PIL import Image
+          import io
+          img = Image.new('RGB', (224, 224), color=(100, 150, 200))
+          img.save('/tmp/test_image.jpg', 'JPEG')
+          print('Test image created')
+          "
+          RESPONSE=$(curl -s -X POST http://localhost:8000/predict \
+            -F "file=@/tmp/test_image.jpg;type=image/jpeg")
+          echo "Predict response: $RESPONSE"
+          echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          assert 'predicted_class' in data, f'Missing predicted_class in: {data}'
+          assert 'confidence' in data, f'Missing confidence in: {data}'
+          assert 'probabilities' in data, f'Missing probabilities in: {data}'
+          assert data['predicted_class'] in ['cat', 'dog'], f'Invalid class: {data[\"predicted_class\"]}'
+          probs = data['probabilities']
+          total = probs['cat'] + probs['dog']
+          assert abs(total - 1.0) < 0.01, f'Probabilities do not sum to 1: {total}'
+          print('✅ Predict endpoint passed')
+          print(f'   predicted_class: {data[\"predicted_class\"]}')
+          print(f'   confidence: {data[\"confidence\"]:.4f}')
+          "
+
+      - name: Test docs endpoint (Swagger UI)
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs)
+          [ "$STATUS" = "200" ] && echo "✅ Swagger docs accessible" || (echo "❌ Docs returned $STATUS" && exit 1)
+
+      - name: Print integration test summary
+        run: |
+          echo "============================================"
+          echo "✅ All Integration Tests Passed!"
+          echo "  - Health endpoint    ✅"
+          echo "  - Root endpoint      ✅"
+          echo "  - Metrics endpoint   ✅"
+          echo "  - Predict endpoint   ✅"
+          echo "  - Swagger docs       ✅"
+          echo "============================================"
+
       - name: Show container logs on failure
         if: failure()
-        run: docker logs test-container
-      
+        run: docker logs integration-container
+
       - name: Stop container
         if: always()
-        run: docker stop test-container || true
+        run: docker stop integration-container && docker rm integration-container || true
 
   # ==========================================================================
   # Security Scan
