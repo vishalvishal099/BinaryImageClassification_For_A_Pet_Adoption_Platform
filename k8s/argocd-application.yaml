@@ -1,5 +1,6 @@
 # =============================================================================
 # ArgoCD Application Manifest for Cats vs Dogs Classifier
+# GitOps CD: ArgoCD watches this repo and auto-syncs k8s/local/ to Minikube
 # =============================================================================
 
 apiVersion: argoproj.io/v1alpha1
@@ -11,40 +12,31 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  
+
   source:
-    repoURL: https://github.com/YOUR_USERNAME/cats-dogs-classifier.git
+    repoURL: https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.git
     targetRevision: main
-    path: k8s
-    
+    path: k8s/local
+
   destination:
     server: https://kubernetes.default.svc
     namespace: cats-dogs-classifier
-  
+
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
-      allowEmpty: false
+      prune: true        # Remove K8s resources deleted from Git
+      selfHeal: true     # Re-sync if someone manually changes K8s
     syncOptions:
       - CreateNamespace=true
-      - PrunePropagationPolicy=foreground
-      - PruneLast=true
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-  
-  # Health checks
+
   ignoreDifferences:
     - group: apps
       kind: Deployment
       jsonPointers:
         - /spec/replicas
-  
-  # Notifications
-  annotations:
-    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployments
-    notifications.argoproj.io/subscribe.on-sync-failed.slack: deployments
