@@ -1,0 +1,10 @@
+{
+  "accuracy": 0.7462,
+  "precision": 0.7973,
+  "recall": 0.6603,
+  "f1_score": 0.7223,
+  "roc_auc": null,
+  "test_loss": 0.5207,
+  "num_samples": null,
+  "mlflow_run_id": "cc1c0edaf1c6492ab808205fdf4813f4"
+}

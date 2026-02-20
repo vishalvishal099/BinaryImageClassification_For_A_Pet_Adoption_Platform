@@ -1,10 +1,6 @@
 [core]
-    remote = storage
+    remote = local_storage
     autostage = true
 
-[remote "storage"]
-    url = s3://your-bucket-name/dvc-storage
-
-# For local storage (alternative)
-# [remote "local"]
-#     url = /path/to/local/dvc-storage
+['remote "local_storage"']
+    url = /tmp/dvc-storage

@@ -186,11 +186,25 @@ def main():
     # Save metrics
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(output_path, 'w') as f:
         json.dump(metrics, f, indent=2)
-    
+
     print(f"\nMetrics saved to {output_path}")
+
+    # Also write models/metrics.json for DVC metrics tracking
+    models_metrics_path = Path("models/metrics.json")
+    models_metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    dvc_metrics = {
+        "accuracy": metrics["accuracy"],
+        "precision": metrics["precision"],
+        "recall": metrics["recall"],
+        "f1_score": metrics["f1_score"],
+        "roc_auc": metrics.get("roc_auc"),
+    }
+    with open(models_metrics_path, 'w') as f:
+        json.dump(dvc_metrics, f, indent=2)
+    print(f"DVC metrics saved to {models_metrics_path}")
 
 
 if __name__ == "__main__":

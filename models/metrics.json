@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.7462,
+  "precision": 0.7973,
+  "recall": 0.6603,
+  "f1_score": 0.7223,
+  "test_loss": 0.5207,
+  "best_val_accuracy": 0.7418,
+  "num_epochs_trained": 3,
+  "model_name": "simple_cnn",
+  "learning_rate": 0.001,
+  "batch_size": 32,
+  "mlflow_run_id": "cc1c0edaf1c6492ab808205fdf4813f4"
+}

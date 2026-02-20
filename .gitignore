@@ -65,11 +65,12 @@ data/processed/
 *.h5
 *.hdf5
 
-# Model files (tracked separately)
+# Model files (tracked by DVC - .dvc pointer files ARE committed)
 models/*.pt
 models/*.pth
 models/*.onnx
 models/*.h5
+!models/*.dvc
 !models/.gitkeep
 
 # Logs
@@ -103,10 +104,8 @@ temp/
 *.tmp
 *.temp
 
-# DVC
-/data/raw.dvc
-/data/processed.dvc
+# DVC (pointer files must be committed to git)
+# data/raw.dvc and data/processed.dvc are tracked by git
 
-# Reports
-reports/*.json
+# Reports (JSON metrics tracked by git/DVC for experiment comparison)
 reports/*.html

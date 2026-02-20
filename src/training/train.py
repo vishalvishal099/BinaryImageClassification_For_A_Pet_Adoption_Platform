@@ -9,10 +9,14 @@ This script handles:
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend
+import matplotlib.pyplot as plt
 import mlflow
 import mlflow.pytorch
 import numpy as np
@@ -340,6 +344,49 @@ class Trainer:
             # Log confusion matrix as artifact
             np.save(save_path / "confusion_matrix.npy", conf_matrix)
             mlflow.log_artifact(str(save_path / "confusion_matrix.npy"))
+
+            # Save and log loss curves
+            fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+            epochs_range = range(1, len(history["train_loss"]) + 1)
+
+            axes[0].plot(epochs_range, history["train_loss"], label="Train Loss", marker="o")
+            axes[0].plot(epochs_range, history["val_loss"], label="Val Loss", marker="o")
+            axes[0].set_title("Training & Validation Loss")
+            axes[0].set_xlabel("Epoch")
+            axes[0].set_ylabel("Loss")
+            axes[0].legend()
+            axes[0].grid(True)
+
+            axes[1].plot(epochs_range, history["train_acc"], label="Train Accuracy", marker="o")
+            axes[1].plot(epochs_range, history["val_acc"], label="Val Accuracy", marker="o")
+            axes[1].set_title("Training & Validation Accuracy")
+            axes[1].set_xlabel("Epoch")
+            axes[1].set_ylabel("Accuracy")
+            axes[1].legend()
+            axes[1].grid(True)
+
+            plt.tight_layout()
+            loss_curve_path = save_path / "loss_curves.png"
+            fig.savefig(str(loss_curve_path), dpi=150, bbox_inches="tight")
+            plt.close(fig)
+            mlflow.log_artifact(str(loss_curve_path))
+            print(f"Loss curves saved to {loss_curve_path}")
+
+            # Save models/metrics.json for DVC metrics tracking
+            metrics_json = {
+                "accuracy": float(test_acc),
+                "precision": float(precision),
+                "recall": float(recall),
+                "f1_score": float(f1),
+                "test_loss": float(test_loss),
+                "best_val_accuracy": float(best_val_acc),
+                "num_epochs_trained": num_epochs,
+            }
+            metrics_json_path = save_path / "metrics.json"
+            with open(metrics_json_path, "w") as mf:
+                json.dump(metrics_json, mf, indent=2)
+            mlflow.log_artifact(str(metrics_json_path))
+            print(f"Metrics saved to {metrics_json_path}")
 
             # Log the best model
             if best_model_path:
