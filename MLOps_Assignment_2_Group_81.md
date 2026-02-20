@@ -6,7 +6,19 @@
 
 ---
 
-## 📌 Table of Contents
+## � Contributors
+
+| Name | BITS ID |
+|------|---------|
+| GOBIND SAH | 2024AA05643 |
+| VISHAL SINGH | 2024AA05641 |
+| YASH VERMA | 2024AA05640 |
+| AVISHI GUPTA | 2024AA05055 |
+| ASIT SHUKLA | 2023AC05956 |
+
+---
+
+## �📌 Table of Contents
 
 - [M1 — Source Code](#m1--source-code)
 - [M2 — CI/CD Pipelines](#m2--cicd-pipelines)
@@ -133,7 +145,6 @@ All services are started with `./start_all.sh`
 | **Architecture Diagram** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/ARCHITECTURE_DIAGRAM.md | Full CI/CD & MLOps architecture with ASCII diagrams |
 | **Setup Guide** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/SETUP_GUIDE.md | Step-by-step local setup, K8s, ArgoCD, monitoring |
 | **Documentation** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/DOCUMENTATION.md | Detailed technical documentation |
-| **Project Status** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/PROJECT_STATUS.md | Current status of all components |
 | **start_all.sh** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/start_all.sh | Single script to start all services |
 
 ---
@@ -165,7 +176,7 @@ BinaryImageClassification_For_A_Pet_Adoption_Platform/
 │   ├── ARCHITECTURE_DIAGRAM.md
 │   ├── SETUP_GUIDE.md
 │   └── DOCUMENTATION.md
-└── PROJECT_STATUS.md
+└── MLOps_Assignment_2_Group_81.md
 ```
 
 ---
