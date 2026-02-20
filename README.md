@@ -160,18 +160,70 @@ pytest tests/ --cov=src --cov-report=html
 
 ## 🛠️ CI/CD Pipeline
 
-The pipeline automatically:
-1. Runs unit tests on every push/PR
-2. Builds Docker image
-3. Pushes to container registry
-4. Deploys to Kubernetes cluster (on main branch)
-5. Runs smoke tests
+### GitOps Flow (CI → CD → ArgoCD)
+
+```
+git push (main)
+      │
+      ▼
+┌─────────────────────┐
+│   CI Pipeline       │  ← .github/workflows/ci.yml
+│  • Unit tests       │
+│  • Build image      │
+│  • Push to ghcr.io  │
+└────────┬────────────┘
+         │ on success
+         ▼
+┌─────────────────────┐
+│   CD Pipeline       │  ← .github/workflows/cd.yml
+│  • Update           │
+│    k8s/local/       │
+│    deployment.yaml  │
+│    (image tag)      │
+│  • git commit+push  │
+│    [skip ci]        │
+└────────┬────────────┘
+         │ manifest change detected
+         ▼
+┌─────────────────────┐
+│   ArgoCD            │  ← auto-sync every 3 min
+│  • Detects diff in  │     or via GitHub webhook
+│    k8s/local/       │
+│  • Applies to       │
+│    Minikube cluster │
+│  • selfHeal: true   │
+│  • prune: true      │
+└─────────────────────┘
+```
+
+### Service URLs
+
+| Service | URL | Notes |
+|---------|-----|-------|
+| FastAPI | http://localhost:8000 | Inference API |
+| API Docs | http://localhost:8000/docs | Swagger UI |
+| MLflow | http://localhost:5001 | Experiment tracking |
+| Prometheus | http://localhost:9090 | Metrics scraping |
+| Grafana | http://localhost:3000 | ML monitoring dashboard |
+| Grafana Dashboard | http://localhost:3000/d/pet-adoption-ml-v2 | 16-panel ML dashboard |
+| ArgoCD UI | https://localhost:9443 | GitOps CD (admin/`wbYZNPLoKU4h-aOd`) |
+| GitHub Repo | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform | Source |
+| Dagshub | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform | DVC + MLflow remote |
+
+### One-command startup
+
+```bash
+bash start_all.sh
+```
+
+Starts: MLflow · FastAPI · Prometheus · Grafana · Metrics pusher
 
 ## 📈 Monitoring
 
-- **Prometheus**: Collects metrics (request count, latency)
-- **Logging**: Structured JSON logging for all requests
-- **Model Performance**: Tracks predictions and accuracy
+- **Prometheus** (port 9090): Scrapes metrics from `/metrics` on ports 8000 and 8081
+- **Grafana** (port 3000): 16-panel ML dashboard — requests, predictions, accuracy, latency, errors, day/time metrics
+- **MLflow** (port 5001): Experiment tracking, model registry, artifact storage
+- **Metrics server** (`scripts/push_metrics.py`): Exposes Prometheus-format ML metrics on port 8081
 
 ## 📝 License
 

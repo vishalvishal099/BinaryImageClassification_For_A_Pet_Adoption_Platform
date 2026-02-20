@@ -1,208 +1,146 @@
 # =============================================================================
-# GitHub Actions CD Pipeline
-# Continuous Deployment to Kubernetes
+# GitHub Actions CD Pipeline — GitOps via ArgoCD
+# Flow: CI builds image → CD updates k8s manifest → ArgoCD auto-syncs cluster
 # =============================================================================
 
 name: CD Pipeline
 
 on:
-  # Only run CD after CI Pipeline succeeds on main
   workflow_run:
     workflows: ["CI Pipeline"]
     branches: [main]
     types: [completed]
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Deployment environment'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
+      image_tag:
+        description: 'Image tag to deploy (default: latest)'
+        required: false
+        default: 'latest'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ==========================================================================
-  # Deploy to Kubernetes
-  # ==========================================================================
-  deploy:
-    name: Deploy to Kubernetes
+  # ============================================================================
+  # Job 1 — Update Kubernetes manifest → push → ArgoCD auto-deploys
+  # ============================================================================
+  update-manifest:
+    name: Update K8s Manifest (GitOps)
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    environment: ${{ github.event.inputs.environment || 'staging' }}
-    
+    permissions:
+      contents: write
+    outputs:
+      image_tag: ${{ steps.set-tag.outputs.image_tag }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
         with:
-          version: 'v1.28.0'
-      
-      - name: Check if Kubernetes is configured
-        id: check-kube
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          if [ -n "$KUBE_CONFIG" ]; then
-            echo "has_kube=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_kube=false" >> $GITHUB_OUTPUT
-            echo "⚠️ KUBE_CONFIG secret not set - skipping K8s deployment"
-          fi
-      
-      - name: Configure Kubernetes context
-        if: steps.check-kube.outputs.has_kube == 'true'
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-      
-      - name: Update image tag in manifests
-        run: |
-          # Manifests live in k8s/local/ - pin image to exact commit SHA
-          sed -i "s|ghcr.io/${{ env.IMAGE_NAME }}:latest|ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}|g" k8s/local/deployment.yaml
-          echo "=== Updated image tag ==="
-          grep "image:" k8s/local/deployment.yaml
-      
-      - name: Apply Kubernetes manifests
-        if: steps.check-kube.outputs.has_kube == 'true'
-        run: |
-          kubectl apply -f k8s/local/namespace.yaml
-          kubectl apply -f k8s/local/configmap.yaml
-          kubectl apply -f k8s/local/deployment.yaml
-          kubectl apply -f k8s/local/service.yaml
-      
-      - name: Wait for deployment rollout
-        if: steps.check-kube.outputs.has_kube == 'true'
-        run: |
-          kubectl rollout status deployment/cats-dogs-classifier \
-            -n cats-dogs-classifier \
-            --timeout=300s
-      
-      - name: Get deployment status
-        if: steps.check-kube.outputs.has_kube == 'true'
-        run: |
-          echo "=== Deployment Status ==="
-          kubectl get deployment cats-dogs-classifier -n cats-dogs-classifier
-          echo ""
-          echo "=== Pods Status ==="
-          kubectl get pods -n cats-dogs-classifier
-          echo ""
-          echo "=== Service Status ==="
-          kubectl get svc -n cats-dogs-classifier
-      
-      - name: Log deployment info (no K8s)
-        if: steps.check-kube.outputs.has_kube != 'true'
-        run: |
-          echo "📦 Container image built and pushed:"
-          echo "   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo "   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          echo ""
-          echo "🚀 To deploy locally:"
-          echo "   podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          echo "   podman run -d --name cats-dogs-api -p 8000:8000 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  # ==========================================================================
-  # Smoke Tests
-  # ==========================================================================
+      - name: Set image tag
+        id: set-tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.image_tag }}"
+          else
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            TAG="${SHA:0:7}"
+          fi
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Deploying image tag: $TAG"
+
+      - name: Update image tag in deployment manifest
+        run: |
+          TAG="${{ steps.set-tag.outputs.image_tag }}"
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="${{ env.REGISTRY }}/${OWNER}/${REPO}"
+
+          sed -i "s|image: ${IMAGE}:.*|image: ${IMAGE}:${TAG}|g" k8s/local/deployment.yaml
+
+          echo "=== Updated manifest ==="
+          grep "image:" k8s/local/deployment.yaml
+
+      - name: Commit and push manifest update
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/local/deployment.yaml
+          if git diff --cached --quiet; then
+            echo "No changes — image tag already up to date."
+          else
+            git commit -m "chore(cd): deploy image :${{ steps.set-tag.outputs.image_tag }} [skip ci]"
+            git push origin main
+            echo "Manifest pushed — ArgoCD will auto-sync within 3 minutes."
+          fi
+
+      - name: Write job summary
+        run: |
+          echo "## CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tag | \`${{ steps.set-tag.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Manifest | \`k8s/local/deployment.yaml\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| ArgoCD App | \`cats-dogs-classifier\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sync Mode | Auto (prune + selfHeal) |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # Job 2 — Smoke Tests (skipped gracefully if no SERVICE_URL secret)
+  # ============================================================================
   smoke-tests:
     name: Post-Deploy Smoke Tests
     runs-on: ubuntu-latest
-    needs: deploy
-    
+    needs: update-manifest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      
-      - name: Install test dependencies
-        # Pillow required by smoke_test.py to create synthetic test images
-        run: pip install requests pytest Pillow
-      
-      - name: Configure Kubernetes context for smoke tests
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          if [ -n "$KUBE_CONFIG" ]; then
-            mkdir -p $HOME/.kube
-            echo "$KUBE_CONFIG" | base64 -d > $HOME/.kube/config
-            chmod 600 $HOME/.kube/config
-            echo "has_kube=true" >> $GITHUB_ENV
-          else
-            echo "has_kube=false" >> $GITHUB_ENV
-          fi
 
-      - name: Port-forward service for smoke tests
-        if: env.has_kube == 'true'
-        run: |
-          kubectl port-forward svc/cats-dogs-classifier 8000:8000 -n cats-dogs-classifier &
-          echo $! > /tmp/pf.pid
-          for i in $(seq 1 15); do
-            sleep 2
-            curl -sf http://localhost:8000/health > /dev/null 2>&1 && echo "Service ready" && break || echo "  Attempt $i/15"
-          done
+      - name: Install test dependencies
+        run: pip install requests pytest Pillow
 
       - name: Run smoke tests
-        # smoke_test.py exits 1 on failure - this WILL fail the pipeline
         env:
           SERVICE_URL: ${{ secrets.SERVICE_URL }}
         run: |
-          if [ -n "$SERVICE_URL" ]; then
-            TARGET_URL="$SERVICE_URL"
-          elif [ "$has_kube" = "true" ]; then
-            TARGET_URL="http://localhost:8000"
-          else
-            echo "WARNING: No KUBE_CONFIG or SERVICE_URL secret set - smoke tests skipped"
+          if [ -z "$SERVICE_URL" ]; then
+            echo "SERVICE_URL secret not set — smoke tests skipped."
+            echo "Set SERVICE_URL in GitHub repo Settings > Secrets to enable."
             exit 0
           fi
-          echo "Running smoke tests against: $TARGET_URL"
-          python scripts/smoke_test.py --url "$TARGET_URL" --wait --max-attempts 20
+          echo "Running smoke tests against: $SERVICE_URL"
+          python scripts/smoke_test.py --url "$SERVICE_URL" --wait --max-attempts 20
 
-      - name: Cleanup port-forward
-        if: always()
-        run: |
-          [ -f /tmp/pf.pid ] && kill "$(cat /tmp/pf.pid)" 2>/dev/null || true
-
-      - name: Report smoke test failure
-        if: failure()
-        run: |
-          echo "::error::Smoke tests FAILED - deployment is unhealthy!"
-          echo "::error::Check logs: kubectl logs -l app=cats-dogs-classifier -n cats-dogs-classifier"
-          exit 1
-
-  # ==========================================================================
-  # Notify on Completion
-  # ==========================================================================
+  # ============================================================================
+  # Job 3 — Notify final status
+  # ============================================================================
   notify:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy, smoke-tests]
+    needs: [update-manifest, smoke-tests]
     if: always()
-    
-    steps:
-      - name: Deployment Success
-        if: ${{ needs.deploy.result == 'success' && needs.smoke-tests.result == 'success' }}
-        run: |
-          echo "✅ Deployment pipeline completed successfully!"
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo ""
-          echo "🔗 Pull the image:"
-          echo "   podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-      
-      - name: Deployment Failed
-        if: needs.deploy.result == 'failure'
-        run: |
-          echo "❌ Deployment failed!"
-          exit 1
 
+    steps:
+      - name: Success
+        if: ${{ needs.update-manifest.result == 'success' }}
+        run: |
+          echo "✅ CD Pipeline complete!"
+          echo "  Tag   : ${{ needs.update-manifest.outputs.image_tag }}"
+          echo "  Image : ghcr.io/${{ env.IMAGE_NAME }}:${{ needs.update-manifest.outputs.image_tag }}"
+          echo "  ArgoCD: https://localhost:9443 (app: cats-dogs-classifier)"
+          echo "  Grafana: http://localhost:3000/d/pet-adoption-ml-v2"
+
+      - name: Failure
+        if: ${{ needs.update-manifest.result == 'failure' }}
+        run: |
+          echo "❌ CD Pipeline failed at manifest update step!"
+          exit 1

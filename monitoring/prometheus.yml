@@ -2,23 +2,20 @@
 # =============================================================================
 
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-  
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
   external_labels:
-    monitor: 'cats-dogs-classifier-monitor'
+    monitor: 'pet-adoption-classifier-monitor'
 
 # Alerting configuration
 alerting:
   alertmanagers:
     - static_configs:
         - targets: []
-          # - alertmanager:9093
 
 # Rule files
 rule_files: []
-  # - "first_rules.yml"
-  # - "second_rules.yml"
 
 # Scrape configurations
 scrape_configs:
@@ -27,16 +24,16 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Cats vs Dogs Classifier API
-  - job_name: 'cats-dogs-classifier'
+  # Pet Adoption Classifier - Live ML metrics on port 8081
+  - job_name: 'pet-adoption-classifier'
     static_configs:
-      - targets: ['classifier:8000']
+      - targets: ['host.containers.internal:8081']
     metrics_path: '/metrics'
     scrape_interval: 10s
-    
-  # Docker containers (if using docker-compose)
-  - job_name: 'docker'
+
+  # FastAPI app metrics on port 8000
+  - job_name: 'fastapi-app'
     static_configs:
-      - targets: ['host.docker.internal:8000']
+      - targets: ['host.containers.internal:8000']
     metrics_path: '/metrics'
-    scrape_interval: 10s
+    scrape_interval: 15s
