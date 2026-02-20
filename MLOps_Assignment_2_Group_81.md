@@ -41,18 +41,18 @@
 
 | Component | GitHub Link |
 |-----------|-------------|
-| **Repository (main)** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform |
-| **Model Training** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/training/train.py |
-| **FastAPI Inference App** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/api/main.py |
-| **Preprocessing** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/data/preprocess.py |
-| **DVC Pipeline Config** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/dvc.yaml |
-| **DVC Remote Config** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.dvc/config |
-| **Kubernetes Manifests** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/tree/main/k8s/local |
-| **ArgoCD Application** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/k8s/argocd-application.yaml |
-| **Prometheus Config** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/monitoring/prometheus.yml |
-| **Metrics Server** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/scripts/push_metrics.py |
-| **start_all.sh** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/start_all.sh |
-| **Unit Tests** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/tree/main/tests |
+| **Repository (main)** | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) |
+| **Model Training** | [src/training/train.py](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/training/train.py) |
+| **FastAPI Inference App** | [src/api/main.py](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/api/main.py) |
+| **Preprocessing** | [src/data/preprocess.py](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/src/data/preprocess.py) |
+| **DVC Pipeline Config** | [dvc.yaml](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/dvc.yaml) |
+| **DVC Remote Config** | [.dvc/config](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.dvc/config) |
+| **Kubernetes Manifests** | [k8s/local/](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/tree/main/k8s/local) |
+| **ArgoCD Application** | [k8s/argocd-application.yaml](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/k8s/argocd-application.yaml) |
+| **Prometheus Config** | [monitoring/prometheus.yml](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/monitoring/prometheus.yml) |
+| **Metrics Server** | [scripts/push_metrics.py](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/scripts/push_metrics.py) |
+| **start_all.sh** | [start_all.sh](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/start_all.sh) |
+| **Unit Tests** | [tests/](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/tree/main/tests) |
 
 ---
 
@@ -62,8 +62,8 @@
 
 | Item | Link |
 |------|------|
-| **CI Workflow File** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.github/workflows/ci.yml |
-| **CI Pipeline Runs** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/actions/workflows/ci.yml |
+| **CI Workflow File** | [ci.yml](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.github/workflows/ci.yml) |
+| **CI Pipeline Runs** | [View CI Runs](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/actions/workflows/ci.yml) |
 
 **CI Jobs:**
 1. **Lint & Code Quality** — black, isort, flake8, mypy
@@ -78,8 +78,8 @@
 
 | Item | Link |
 |------|------|
-| **CD Workflow File** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.github/workflows/cd.yml |
-| **CD Pipeline Runs** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/actions/workflows/cd.yml |
+| **CD Workflow File** | [cd.yml](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/.github/workflows/cd.yml) |
+| **CD Pipeline Runs** | [View CD Runs](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/actions/workflows/cd.yml) |
 
 **CD GitOps Flow:**
 ```
@@ -100,9 +100,9 @@ git push → CI Pipeline passes
 
 | Item | Link |
 |------|------|
-| **GHCR Package** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/pkgs/container/binaryimageclassification_for_a_pet_adoption_platform |
+| **GHCR Package** | [binaryimageclassification_for_a_pet_adoption_platform](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/pkgs/container/binaryimageclassification_for_a_pet_adoption_platform) |
 | **Docker Pull Command** | `docker pull ghcr.io/vishalvishal099/binaryimageclassification_for_a_pet_adoption_platform:latest` |
-| **Dockerfile** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/Dockerfile |
+| **Dockerfile** | [Dockerfile](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/Dockerfile) |
 
 ---
 
@@ -110,14 +110,14 @@ git push → CI Pipeline passes
 
 | Item | Link |
 |------|------|
-| **Dagshub Repository** | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform |
-| **MLflow Experiment Tracking (Dagshub)** | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow |
-| **DVC Data Remote (Dagshub)** | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc |
+| **Dagshub Repository** | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) |
+| **MLflow Experiment Tracking (Dagshub)** | [MLflow on Dagshub](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow) |
+| **DVC Data Remote (Dagshub)** | [DVC Remote on Dagshub](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc) |
 
 **MLflow Details:**
 - Model registered as: `CatsDogsClassifier` → **Production** stage
 - Artifacts logged: `best_model.pt`, `loss_curves.png`, `confusion_matrix.npy`
-- Local tracking server: `http://localhost:5001`
+- Local tracking server: [`http://localhost:5001`](http://localhost:5001)
 
 **DVC Details:**
 - Pull data: `dvc pull`
@@ -132,16 +132,16 @@ All services are started with `./start_all.sh`
 
 | Service | Local URL | Description |
 |---------|-----------|-------------|
-| **MLflow UI** | http://localhost:5001 | Experiment tracking & model registry |
-| **FastAPI (Inference)** | http://localhost:8000 | REST API — `/predict`, `/health`, `/metrics` |
-| **FastAPI Docs (Swagger)** | http://localhost:8000/docs | Interactive API documentation |
-| **FastAPI Health** | http://localhost:8000/health | Health check endpoint |
-| **FastAPI Metrics** | http://localhost:8000/metrics | Prometheus scrape endpoint |
-| **Prometheus** | http://localhost:9090/graph | Metrics collection & querying |
-| **Grafana Dashboard** | http://localhost:3000/d/pet-adoption-ml-v2 | ML observability dashboard |
-| **Grafana Home** | http://localhost:3000 | (admin / admin) |
-| **Metrics Server** | http://localhost:8081/metrics | 31 metric families, 60+ time series |
-| **ArgoCD UI** | https://localhost:9443 | GitOps CD controller (admin / see `start_all.sh` output) |
+| **MLflow UI** | [http://localhost:5001](http://localhost:5001) | Experiment tracking & model registry |
+| **FastAPI (Inference)** | [http://localhost:8000](http://localhost:8000) | REST API — `/predict`, `/health`, `/metrics` |
+| **FastAPI Docs (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) | Interactive API documentation |
+| **FastAPI Health** | [http://localhost:8000/health](http://localhost:8000/health) | Health check endpoint |
+| **FastAPI Metrics** | [http://localhost:8000/metrics](http://localhost:8000/metrics) | Prometheus scrape endpoint |
+| **Prometheus** | [http://localhost:9090/graph](http://localhost:9090/graph) | Metrics collection & querying |
+| **Grafana Dashboard** | [http://localhost:3000/d/pet-adoption-ml-v2](http://localhost:3000/d/pet-adoption-ml-v2) | ML observability dashboard |
+| **Grafana Home** | [http://localhost:3000](http://localhost:3000) | (admin / admin) |
+| **Metrics Server** | [http://localhost:8081/metrics](http://localhost:8081/metrics) | 31 metric families, 60+ time series |
+| **ArgoCD UI** | [https://localhost:9443](https://localhost:9443) | GitOps CD controller (admin / see `start_all.sh` output) |
 
 ---
 
@@ -149,11 +149,11 @@ All services are started with `./start_all.sh`
 
 | Document | GitHub Link | Description |
 |----------|-------------|-------------|
-| **README** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/README.md | Project overview, quick start, GitOps flow |
-| **Architecture Diagram** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/ARCHITECTURE_DIAGRAM.md | Full CI/CD & MLOps architecture with ASCII diagrams |
-| **Setup Guide** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/SETUP_GUIDE.md | Step-by-step local setup, K8s, ArgoCD, monitoring |
-| **Documentation** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/DOCUMENTATION.md | Detailed technical documentation |
-| **start_all.sh** | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/start_all.sh | Single script to start all services |
+| **README** | [README.md](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/README.md) | Project overview, quick start, GitOps flow |
+| **Architecture Diagram** | [ARCHITECTURE_DIAGRAM.md](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/ARCHITECTURE_DIAGRAM.md) | Full CI/CD & MLOps architecture with ASCII diagrams |
+| **Setup Guide** | [SETUP_GUIDE.md](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/SETUP_GUIDE.md) | Step-by-step local setup, K8s, ArgoCD, monitoring |
+| **Documentation** | [DOCUMENTATION.md](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/docs/DOCUMENTATION.md) | Detailed technical documentation |
+| **start_all.sh** | [start_all.sh](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform/blob/main/start_all.sh) | Single script to start all services |
 
 ---
 
