@@ -109,35 +109,6 @@ pytest tests/ -v
 pytest tests/ --cov=src --cov-report=html
 ```
 
-## 📋 Milestones
-
-### M1: Model Development & Experiment Tracking
-- [x] Git for source code versioning
-- [x] DVC for dataset versioning
-- [x] Baseline CNN model implementation
-- [x] MLflow experiment tracking
-
-### M2: Model Packaging & Containerization
-- [x] FastAPI inference service
-- [x] Health check and prediction endpoints
-- [x] requirements.txt with pinned versions
-- [x] Dockerfile for containerization
-
-### M3: CI Pipeline for Build, Test & Image Creation
-- [x] Unit tests with pytest
-- [x] GitHub Actions CI pipeline
-- [x] Docker image publishing to registry
-
-### M4: CD Pipeline & Deployment
-- [x] Kubernetes manifests (Deployment + Service)
-- [x] Docker Compose configuration
-- [x] ArgoCD/GitHub Actions CD flow
-- [x] Post-deploy smoke tests
-
-### M5: Monitoring, Logs & Final Submission
-- [x] Request/response logging
-- [x] Prometheus metrics (request count, latency)
-- [x] Model performance tracking
 
 ## 🔧 Configuration
 
@@ -200,15 +171,15 @@ git push (main)
 
 | Service | URL | Notes |
 |---------|-----|-------|
-| FastAPI | http://localhost:8000 | Inference API |
-| API Docs | http://localhost:8000/docs | Swagger UI |
-| MLflow | http://localhost:5001 | Experiment tracking |
-| Prometheus | http://localhost:9090 | Metrics scraping |
-| Grafana | http://localhost:3000 | ML monitoring dashboard |
-| Grafana Dashboard | http://localhost:3000/d/pet-adoption-ml-v2 | 16-panel ML dashboard |
-| ArgoCD UI | https://localhost:9443 | GitOps CD (admin/`wbYZNPLoKU4h-aOd`) |
-| GitHub Repo | https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform | Source |
-| Dagshub | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform | DVC + MLflow remote |
+| FastAPI | [http://localhost:8000](http://localhost:8000) | Inference API |
+| API Docs | [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI |
+| MLflow | [http://localhost:5001](http://localhost:5001) | Experiment tracking |
+| Prometheus | [http://localhost:9090/graph](http://localhost:9090/graph) | Metrics scraping |
+| Grafana | [http://localhost:3000](http://localhost:3000) | ML monitoring dashboard |
+| Grafana Dashboard | [http://localhost:3000/d/pet-adoption-ml-v2](http://localhost:3000/d/pet-adoption-ml-v2) | 16-panel ML dashboard |
+| ArgoCD UI | [https://localhost:9443](https://localhost:9443) | GitOps CD (admin/`wbYZNPLoKU4h-aOd`) |
+| GitHub Repo | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) | Source |
+| Dagshub | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) | DVC + MLflow remote |
 
 ### One-command startup
 
@@ -225,6 +196,3 @@ Starts: MLflow · FastAPI · Prometheus · Grafana · Metrics pusher
 - **MLflow** (port 5001): Experiment tracking, model registry, artifact storage
 - **Metrics server** (`scripts/push_metrics.py`): Exposes Prometheus-format ML metrics on port 8081
 
-## 📝 License
-
-MIT License

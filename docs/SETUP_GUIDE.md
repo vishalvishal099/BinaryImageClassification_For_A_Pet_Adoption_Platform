@@ -184,7 +184,7 @@ dvc pull
 ```
 
 > **Note**: DVC remote is already configured in `.dvc/config` pointing to:
-> `https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc`
+> [`https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc`](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc)
 
 ### Option B: Download from Kaggle
 
@@ -307,8 +307,8 @@ chmod +x run_local.sh
 ```
 
 This starts:
-- MLflow tracking server on http://localhost:5001
-- FastAPI inference service on http://localhost:8000
+- MLflow tracking server on [http://localhost:5001](http://localhost:5001)
+- FastAPI inference service on [http://localhost:8000](http://localhost:8000)
 
 ### Option B: Manual Start
 
@@ -412,10 +412,10 @@ docker-compose down
 
 | Service | Port | URL | Profile |
 |---------|------|-----|---------|
-| classifier | 8000 | http://localhost:8000 | default |
-| mlflow | 5001 | http://localhost:5001 | dev |
-| prometheus | 9090 | http://localhost:9090 | monitoring |
-| grafana | 3000 | http://localhost:3000 | monitoring |
+| classifier | 8000 | [http://localhost:8000](http://localhost:8000) | default |
+| mlflow | 5001 | [http://localhost:5001](http://localhost:5001) | dev |
+| prometheus | 9090 | [http://localhost:9090](http://localhost:9090) | monitoring |
+| grafana | 3000 | [http://localhost:3000](http://localhost:3000) | monitoring |
 
 ---
 
@@ -531,10 +531,10 @@ brew services start grafana
 
 | Tool | URL | Credentials |
 |------|-----|-------------|
-| **Prometheus** | http://localhost:9090/graph | N/A |
-| **Grafana** | http://localhost:3000/d/pet-adoption-ml-v2 | admin/admin |
-| **Metrics Server** | http://localhost:8081/metrics | N/A |
-| **FastAPI Metrics** | http://localhost:8000/metrics | N/A |
+| **Prometheus** | [http://localhost:9090/graph](http://localhost:9090/graph) | N/A |
+| **Grafana** | [http://localhost:3000/d/pet-adoption-ml-v2](http://localhost:3000/d/pet-adoption-ml-v2) | admin/admin |
+| **Metrics Server** | [http://localhost:8081/metrics](http://localhost:8081/metrics) | N/A |
+| **FastAPI Metrics** | [http://localhost:8000/metrics](http://localhost:8000/metrics) | N/A |
 
 ### Prometheus Metrics Available (31 metric families)
 
@@ -765,15 +765,15 @@ gh run view <run-id> --log
 
 | Service | URL |
 |---------|-----|
-| FastAPI Docs | http://localhost:8000/docs |
-| FastAPI Health | http://localhost:8000/health |
-| FastAPI Metrics | http://localhost:8000/metrics |
-| MLflow UI | http://localhost:5001 |
-| Prometheus | http://localhost:9090/graph |
-| Grafana | http://localhost:3000/d/pet-adoption-ml-v2 |
-| ArgoCD UI | https://localhost:9443 |
-| Metrics Server | http://localhost:8081/metrics |
-| Dagshub | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform |
+| FastAPI Docs | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| FastAPI Health | [http://localhost:8000/health](http://localhost:8000/health) |
+| FastAPI Metrics | [http://localhost:8000/metrics](http://localhost:8000/metrics) |
+| MLflow UI | [http://localhost:5001](http://localhost:5001) |
+| Prometheus | [http://localhost:9090/graph](http://localhost:9090/graph) |
+| Grafana | [http://localhost:3000/d/pet-adoption-ml-v2](http://localhost:3000/d/pet-adoption-ml-v2) |
+| ArgoCD UI | [https://localhost:9443](https://localhost:9443) |
+| Metrics Server | [http://localhost:8081/metrics](http://localhost:8081/metrics) |
+| Dagshub | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) |
 
 ---
 
@@ -826,22 +826,3 @@ BinaryImageClassification_For_A_Pet_Adoption_Platform/
 ```
 
 ---
-
-## 🎉 You're Ready!
-
-After completing this setup:
-
-1. ✅ Python environment configured
-2. ✅ Dependencies installed
-3. ✅ Data downloaded and tracked
-4. ✅ Model trained
-5. ✅ API running locally
-6. ✅ Docker image built
-7. ✅ Monitoring stack ready
-
-**Next Steps:**
-- Read `VIDEO_RECORDING_GUIDE.md` for demo instructions
-- Check `ARCHITECTURE_DIAGRAM.md` for system overview
-- Explore API at http://localhost:8000/docs
-- View experiments at http://localhost:5001
-- Check ArgoCD app status at https://localhost:9443
