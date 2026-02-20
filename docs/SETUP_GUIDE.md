@@ -184,7 +184,7 @@ dvc pull
 ```
 
 > **Note**: DVC remote is already configured in `.dvc/config` pointing to:
-> [`https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc`](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc)
+> [`https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform`](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform)
 
 ### Option B: Download from Kaggle
 

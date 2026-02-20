@@ -112,7 +112,7 @@ git push → CI Pipeline passes
 |------|------|
 | **Dagshub Repository** | [BinaryImageClassification_For_A_Pet_Adoption_Platform](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform) |
 | **MLflow Experiment Tracking (Dagshub)** | [MLflow on Dagshub](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow) |
-| **DVC Data Remote (Dagshub)** | [DVC Remote on Dagshub](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc) |
+| **DVC Data Remote (Dagshub)** | [DVC Remote on Dagshub](https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform?filter=dvc) |
 
 **MLflow Details:**
 - Model registered as: `CatsDogsClassifier` → **Production** stage
