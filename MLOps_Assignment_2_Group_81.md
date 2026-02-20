@@ -6,7 +6,15 @@
 
 ---
 
-## � Contributors
+> ## 🎬 Screen Recording — Complete MLOps Project
+>
+> [![Watch the Demo](https://img.shields.io/badge/▶%20Watch%20Demo-Google%20Drive-blue?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1WXSlw_qqexVvShbrRsWuiAA-MoOgkXDY/view?usp=sharing)
+>
+> **🔗 Link:** https://drive.google.com/file/d/1WXSlw_qqexVvShbrRsWuiAA-MoOgkXDY/view?usp=sharing
+
+---
+
+## 👥 Contributors
 
 | Name | BITS ID |
 |------|---------|
@@ -18,7 +26,7 @@
 
 ---
 
-## �📌 Table of Contents
+##  Table of Contents
 
 - [M1 — Source Code](#m1--source-code)
 - [M2 — CI/CD Pipelines](#m2--cicd-pipelines)
