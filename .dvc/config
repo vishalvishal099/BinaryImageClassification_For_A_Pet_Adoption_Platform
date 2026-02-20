@@ -1,6 +1,7 @@
 [core]
-    remote = local_storage
+    remote = dagshub
     autostage = true
-
 ['remote "local_storage"']
     url = /tmp/dvc-storage
+['remote "dagshub"']
+    url = https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc
