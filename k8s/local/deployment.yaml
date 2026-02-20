@@ -35,7 +35,7 @@ spec:
       containers:
         - name: classifier
           # Image from GitHub Container Registry - auto-pulled on every deploy
-          image: ghcr.io/vishalvishal099/binaryimageclassification_for_a_pet_adoption_platform:0898399
+          image: ghcr.io/vishalvishal099/binaryimageclassification_for_a_pet_adoption_platform:65176be
           # Always pull so ArgoCD / K8s picks up the latest image on every sync
           imagePullPolicy: Always
           ports:
