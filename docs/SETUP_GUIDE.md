@@ -172,18 +172,19 @@ export $(cat .env | xargs)
 
 ## 5. Data Setup with DVC
 
-### Option A: Pull Data from DVC Remote (If configured)
+### Option A: Pull Data from Dagshub (Recommended)
+
+The dataset is hosted on **Dagshub** (10GB free storage). Simply pull:
 
 ```bash
-# Initialize DVC (if not already)
-dvc init
-
-# Configure remote (example with local storage)
-dvc remote add -d local_storage /tmp/dvc-storage
-
-# Pull data
+# Pull data from Dagshub
 dvc pull
+
+# This downloads ~1.4GB of images to data/raw/
 ```
+
+> **Note**: DVC remote is already configured in `.dvc/config` pointing to:
+> `https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc`
 
 ### Option B: Download from Kaggle
 
@@ -626,13 +627,18 @@ docker logs <container_id>
 
 ```bash
 # Error: Unable to pull from remote
-# Solution: Configure DVC remote
+# Solution: DVC remote is configured to Dagshub
 
 # Check remote config
 cat .dvc/config
 
-# Use local remote for testing
-dvc remote add -d local /tmp/dvc-storage
+# Pull from Dagshub (default remote)
+dvc pull
+
+# If authentication required, configure credentials:
+dvc remote modify dagshub --local auth basic
+dvc remote modify dagshub --local user <your_dagshub_username>
+dvc remote modify dagshub --local password <your_dagshub_token>
 ```
 
 #### 6. CUDA/GPU Issues

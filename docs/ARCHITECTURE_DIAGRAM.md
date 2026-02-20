@@ -25,7 +25,7 @@
 │  │                          │                                                         │   │
 │  │                          ▼                                                         │   │
 │  │                   ┌────────────┐                                                   │   │
-│  │                   │ DVC Remote │  (/tmp/dvc-storage or S3)                         │   │
+│  │                   │ DVC Remote │  (Dagshub: dagshub.com/vishalvishal099/...)       │   │
 │  │                   └────────────┘                                                   │   │
 │  └──────────────────────────────────────────────────────────────────────────────────┘   │
 │         │                                                                                │
@@ -348,7 +348,7 @@ CD Pipeline (cd.yml) [triggered by workflow_run]
 | Layer | Tool | Purpose |
 |-------|------|---------|
 | **Version Control** | Git + GitHub | Source code management |
-| **Data Versioning** | DVC | Dataset versioning & pipelines |
+| **Data Versioning** | DVC + Dagshub | Dataset versioning & cloud storage |
 | **Experiment Tracking** | MLflow | Metrics, params, artifacts logging |
 | **CI/CD** | GitHub Actions | Automated pipelines |
 | **Containerization** | Docker | Image building |

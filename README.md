@@ -44,7 +44,7 @@ This project implements an end-to-end MLOps pipeline for binary image classifica
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.git
 cd BinaryImageClassification_For_A_Pet_Adoption_Platform
 
 # Create virtual environment
@@ -54,9 +54,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Initialize DVC
-dvc init
-dvc pull  # Pull data from remote storage
+# Pull data from Dagshub
+dvc pull  # Downloads ~1.4GB of images from Dagshub
 ```
 
 ### Data Preparation

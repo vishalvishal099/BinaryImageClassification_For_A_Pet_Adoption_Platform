@@ -70,7 +70,8 @@ cat .dvc/config
 **Talking Points:**
 - "DVC tracks our dataset with pointer files committed to git"
 - "The dvc.yaml defines our ML pipeline: preprocess → train → evaluate"
-- "Data is versioned and can be pulled with `dvc pull`"
+- "Data is stored on Dagshub and can be pulled with `dvc pull`"
+- "Dagshub provides 10GB free storage for ML datasets"
 
 ### 1.3 MLflow Experiment Tracking
 ```bash

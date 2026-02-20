@@ -78,11 +78,14 @@ dvc add data/raw
 git add data/raw.dvc .gitignore
 git commit -m "Add raw data tracking"
 
-# Configure remote storage
-dvc remote add -d storage s3://your-bucket/dvc-storage
+# Remote storage is configured to Dagshub
+# URL: https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc
 
-# Push data to remote
+# Push data to Dagshub
 dvc push
+
+# Pull data from Dagshub
+dvc pull
 ```
 
 ### 1.2 Data Preprocessing
