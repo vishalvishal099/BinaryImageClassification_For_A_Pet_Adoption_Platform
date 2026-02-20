@@ -1,0 +1,19 @@
+# =============================================================================
+# Development-only dependencies — exact versions
+# Install with: pip install -r requirements-dev.txt
+# (also installs runtime deps via -r requirements.txt)
+# =============================================================================
+
+-r requirements.txt
+
+# Testing
+pytest==9.0.2
+pytest-cov==7.0.0
+pytest-asyncio==1.3.0
+httpx==0.28.1          # async HTTP client for FastAPI test client
+
+# Code Quality
+black==25.12.0
+isort==7.0.0
+flake8==7.3.0
+mypy==1.19.1
