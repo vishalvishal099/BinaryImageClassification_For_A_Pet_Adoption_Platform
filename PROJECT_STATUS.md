@@ -1,8 +1,8 @@
 # 🎯 MLOps Pipeline - Project Status
 
-**Date:** February 14, 2026  
+**Date:** February 21, 2026  
 **Repository:** BinaryImageClassification_For_A_Pet_Adoption_Platform  
-**Status:** ✅ **Production Ready (Without Local Docker)**
+**Status:** ✅ **Production Ready — Full GitOps Stack Running**
 
 ---
 
@@ -20,10 +20,12 @@
 - ✅ **Model Artifact**: `models/best_model.pt` (4.9MB)
 
 ### 2. Experiment Tracking
-- ✅ **MLflow**: Fully configured and operational
+- ✅ **MLflow**: Fully configured and operational on port **5001**
 - ✅ **Experiments Logged**: All training metrics, parameters, artifacts
-- ✅ **Model Registry**: Model registered as 'cats_dogs_classifier'
-- ✅ **Access**: `mlflow ui --port 5000`
+- ✅ **Artifacts in MLflow**: `best_model.pt`, `loss_curves.png`, `confusion_matrix.npy`
+- ✅ **Model Registry**: Model registered as `CatsDogsClassifier` → **Production** stage
+- ✅ **Dagshub MLflow Remote**: https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow
+- ✅ **Access**: `mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db`
 
 ### 3. Code Quality & Testing
 - ✅ **Unit Tests**: 35/35 tests passing
@@ -35,7 +37,9 @@
 - ✅ **Data Download**: Kaggle dataset via kagglehub
 - ✅ **Preprocessing**: Image resizing, normalization, augmentation
 - ✅ **Data Splits**: 80% train, 10% val, 10% test
-- ✅ **DVC**: Configured for data versioning
+- ✅ **DVC**: Configured for data versioning (`dvc.yaml` defines preprocess → train → evaluate pipeline)
+- ✅ **Dagshub DVC Remote**: `https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.dvc`
+- ✅ **Pull data**: `dvc pull` (authenticates via Dagshub token)
 
 ### 5. Inference Service
 - ✅ **FastAPI Application**: Fully functional
@@ -50,19 +54,24 @@
   - Lint code
   - Run tests
   - Build Docker image
-  - Push to GitHub Container Registry
-- ✅ **GitHub Actions CD** (`.github/workflows/cd.yml`):
-  - Deploy to Kubernetes
-  - Update ArgoCD application
+  - Push to GitHub Container Registry (`ghcr.io`)
+- ✅ **GitHub Actions CD** (`.github/workflows/cd.yml`) — **GitOps flow**:
+  - **Job 1 — `update-manifest`**: Updates image tag in `k8s/local/deployment.yaml` and commits `[skip ci]` back to `main`
+  - **Job 2 — `smoke-tests`**: Runs post-deploy health checks
+  - **Job 3 — `notify`**: Reports pipeline status
+- ✅ **ArgoCD** auto-detects manifest change and syncs deployment to Minikube (no manual `kubectl apply` needed)
 
 ### 7. Kubernetes Deployment
 - ✅ **Manifests Created**:
   - `k8s/namespace.yaml`
-  - `k8s/deployment.yaml`
+  - `k8s/local/deployment.yaml` (image tag auto-updated by CD pipeline)
   - `k8s/service.yaml`
   - `k8s/hpa.yaml` (Horizontal Pod Autoscaler)
   - `k8s/configmap.yaml`
   - `k8s/argocd-application.yaml`
+- ✅ **ArgoCD Application**: `cats-dogs-classifier` — **Synced + Healthy**
+  - UI: `https://localhost:9443` (admin / see `.env`)
+  - Watches `k8s/local/` on `main` branch; auto-syncs on every manifest change
 
 ### 8. Containerization
 - ✅ **Dockerfile**: Multi-stage build optimized
@@ -70,10 +79,15 @@
 - ⚠️ **Local Docker**: Not installed (not required for cloud deployment)
 
 ### 9. Monitoring & Observability
-- ✅ **Prometheus Config**: `monitoring/prometheus.yml`
-- ✅ **Grafana Datasource**: Pre-configured
+- ✅ **Prometheus**: Running on port **9090** (Podman container), scraping metrics from ports 8081 and 8000
+  - URL: `http://localhost:9090/graph`
+- ✅ **Grafana**: Running on port **3000** (Homebrew service)
+  - Dashboard: `http://localhost:3000/d/pet-adoption-ml-v2`
+- ✅ **Metrics Server**: `scripts/push_metrics.py` on port **8081** — 31 metric families, 60+ time series (API, latency, predictions, model performance, errors, system, batch, data pipeline, business)
+- ✅ **MLflow**: Experiment tracking + model registry on port **5001**
+  - URL: `http://localhost:5001`
 - ✅ **Structured Logging**: Using structlog
-- ✅ **Metrics Endpoint**: `/metrics` with request counts, latencies
+- ✅ **Metrics Endpoint**: FastAPI `/metrics` with request counts, latencies
 
 ### 10. Documentation
 - ✅ **README.md**: Complete project overview
@@ -100,11 +114,15 @@ When you push code to GitHub, the CI/CD pipeline automatically:
 # Activate virtual environment
 source venv/bin/activate
 
-# Start MLflow UI
-mlflow ui --port 5000 &
+# Start MLflow tracking server (port 5001)
+mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db &
 
 # Start Inference Service
 MODEL_PATH=models/best_model.pt uvicorn src.inference.app:app --port 8000
+
+# Run DVC pipeline (pull data from Dagshub + run stages)
+dvc pull
+dvc repro
 
 # Run Tests
 pytest tests/ -v
@@ -165,9 +183,11 @@ Using the manifests in `k8s/` directory.
 - ✅ **End-to-End MLOps Pipeline**: Complete from data to deployment
 - ✅ **High Accuracy**: 92% on test set
 - ✅ **Production-Ready Code**: Tested, linted, documented
-- ✅ **Cloud-Native**: Containerized, K8s-ready, GitOps-enabled
-- ✅ **Monitoring**: Prometheus metrics, structured logging
-- ✅ **CI/CD**: Automated testing and deployment
+- ✅ **Cloud-Native**: Containerized, K8s-ready, full GitOps with ArgoCD
+- ✅ **Monitoring**: Prometheus (9090) + Grafana (3000) + 31 metric families
+- ✅ **CI/CD**: GitHub Actions CI + GitOps CD (manifest update → ArgoCD auto-sync)
+- ✅ **Data Versioning**: DVC with Dagshub remote
+- ✅ **Experiment Tracking**: MLflow (5001) + Dagshub MLflow remote
 - ✅ **Works Without Local Docker**: Development and testing fully functional
 
 ---
@@ -178,19 +198,40 @@ Using the manifests in `k8s/` directory.
 # Train model
 python src/training/train.py --config configs/train_config.yaml
 
+# Run DVC pipeline (pull data + run stages via Dagshub remote)
+dvc pull
+dvc repro
+
 # Run tests
 pytest tests/ -v
+
+# Start MLflow tracking server
+mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db
 
 # Start inference service
 MODEL_PATH=models/best_model.pt uvicorn src.inference.app:app --port 8000
 
-# View experiments
-mlflow ui --port 5000
+# Start metrics server (Prometheus scrape target on :8081)
+python scripts/push_metrics.py &
+
+# Check ArgoCD app status
+argocd app get cats-dogs-classifier
 
 # Test inference
 curl -X POST http://localhost:8000/predict \
   -F "file=@path/to/image.jpg"
 ```
+
+### 🔗 Service URLs
+| Service | URL |
+|---------|-----|
+| MLflow | http://localhost:5001 |
+| FastAPI | http://localhost:8000 |
+| Prometheus | http://localhost:9090/graph |
+| Grafana | http://localhost:3000/d/pet-adoption-ml-v2 |
+| ArgoCD | https://localhost:9443 |
+| Metrics | http://localhost:8081/metrics |
+| Dagshub | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform |
 
 ---
 

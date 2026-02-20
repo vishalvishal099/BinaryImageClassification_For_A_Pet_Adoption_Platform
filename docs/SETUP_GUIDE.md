@@ -267,10 +267,11 @@ python scripts/evaluate.py --model-path models/best_model.pt --data-dir data/pro
 ### View MLflow Experiments
 
 ```bash
-# Start MLflow UI
-mlflow ui --port 5000
+# Start MLflow tracking server (port 5001)
+mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db
 
-# Open browser: http://localhost:5000
+# Open browser: http://localhost:5001
+# Dagshub remote: https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow
 ```
 
 **MLflow UI shows:**
@@ -306,14 +307,14 @@ chmod +x run_local.sh
 ```
 
 This starts:
-- MLflow UI on http://localhost:5000
+- MLflow tracking server on http://localhost:5001
 - FastAPI inference service on http://localhost:8000
 
 ### Option B: Manual Start
 
 ```bash
-# Terminal 1: Start MLflow UI
-mlflow ui --port 5000
+# Terminal 1: Start MLflow tracking server
+mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db
 
 # Terminal 2: Start FastAPI
 uvicorn src.inference.app:app --host 0.0.0.0 --port 8000 --reload
@@ -412,7 +413,7 @@ docker-compose down
 | Service | Port | URL | Profile |
 |---------|------|-----|---------|
 | classifier | 8000 | http://localhost:8000 | default |
-| mlflow | 5000 | http://localhost:5000 | dev |
+| mlflow | 5001 | http://localhost:5001 | dev |
 | prometheus | 9090 | http://localhost:9090 | monitoring |
 | grafana | 3000 | http://localhost:3000 | monitoring |
 
@@ -430,17 +431,45 @@ minikube start
 kind create cluster --name cats-dogs
 ```
 
-### Deploy to Kubernetes
+### GitOps with ArgoCD (Recommended)
+
+The project uses **ArgoCD** for GitOps-based continuous deployment. When the CD pipeline updates `k8s/local/deployment.yaml` and pushes to `main`, ArgoCD automatically detects the change and syncs the cluster — no manual `kubectl apply` needed.
+
+```bash
+# Install ArgoCD in cluster
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Wait for ArgoCD to be ready
+kubectl wait --for=condition=available deployment/argocd-server -n argocd --timeout=120s
+
+# Apply ArgoCD application manifest (watches k8s/local/ on main branch)
+kubectl apply -f k8s/argocd-application.yaml
+
+# Access ArgoCD UI (port-forward)
+kubectl port-forward svc/argocd-server -n argocd 9443:443 &
+# UI: https://localhost:9443  (login: admin)
+
+# Get initial admin password
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+
+# Check app status
+argocd app get cats-dogs-classifier
+argocd app list
+```
+
+**GitOps Flow:**
+```
+git push → CI Pipeline → CD: updates k8s/local/deployment.yaml → git push [skip ci]
+    └──▶ ArgoCD detects manifest change → auto-syncs to Minikube cluster
+```
+
+### Manual Deploy to Kubernetes (Alternative)
 
 ```bash
 # Apply all manifests
 kubectl apply -f k8s/local/
-
-# Or apply individually:
-kubectl apply -f k8s/local/namespace.yaml
-kubectl apply -f k8s/local/configmap.yaml
-kubectl apply -f k8s/local/deployment.yaml
-kubectl apply -f k8s/local/service.yaml
 
 # Check deployment status
 kubectl get all -n cats-dogs-classifier
@@ -483,32 +512,46 @@ kubectl delete namespace cats-dogs-classifier
 ### Start Monitoring Stack
 
 ```bash
-# Using Docker Compose
-docker-compose --profile monitoring up -d
+# Prometheus (Podman container) — port 9090
+podman run -d --name prometheus \
+  -p 9090:9090 \
+  -v $(pwd)/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus
+# UI: http://localhost:9090/graph
+
+# Metrics server (push_metrics.py) — port 8081
+python scripts/push_metrics.py &
+
+# Grafana (Homebrew) — port 3000
+brew services start grafana
+# Dashboard: http://localhost:3000/d/pet-adoption-ml-v2
 ```
 
-### Access Monitoring Tools
+### Service URLs
 
 | Tool | URL | Credentials |
 |------|-----|-------------|
-| **Prometheus** | http://localhost:9090 | N/A |
-| **Grafana** | http://localhost:3000 | admin/admin |
-| **Metrics Endpoint** | http://localhost:8000/metrics | N/A |
+| **Prometheus** | http://localhost:9090/graph | N/A |
+| **Grafana** | http://localhost:3000/d/pet-adoption-ml-v2 | admin/admin |
+| **Metrics Server** | http://localhost:8081/metrics | N/A |
+| **FastAPI Metrics** | http://localhost:8000/metrics | N/A |
 
-### Prometheus Metrics Available
+### Prometheus Metrics Available (31 metric families)
 
 ```
-# Request metrics
-http_requests_total{method, endpoint, status}
-http_request_duration_seconds{method, endpoint}
+# API request metrics
+api_requests_total{endpoint, method, status}
+api_request_duration_seconds{endpoint, quantile}  # p50/p90/p95/p99
 
 # Prediction metrics
-prediction_class_total{class="cat|dog"}
-model_inference_time_seconds
+prediction_count{class="cat|dog", model_version}
+model_accuracy, model_precision, model_recall, model_f1_score
 
 # System metrics
-process_cpu_seconds_total
-process_resident_memory_bytes
+system_cpu_usage_percent, system_memory_usage_bytes
+
+# Data pipeline metrics
+dvc_pull_duration_seconds, preprocessing_duration_seconds
 ```
 
 ### Configure Grafana
@@ -516,8 +559,8 @@ process_resident_memory_bytes
 1. Open http://localhost:3000
 2. Login: admin / admin
 3. Add Prometheus datasource:
-   - URL: http://prometheus:9090
-4. Import dashboard from `monitoring/grafana/dashboards/`
+   - URL: http://localhost:9090
+4. Dashboard auto-provisioned at `http://localhost:3000/d/pet-adoption-ml-v2`
 
 ---
 
@@ -725,9 +768,12 @@ gh run view <run-id> --log
 | FastAPI Docs | http://localhost:8000/docs |
 | FastAPI Health | http://localhost:8000/health |
 | FastAPI Metrics | http://localhost:8000/metrics |
-| MLflow UI | http://localhost:5000 |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3000 |
+| MLflow UI | http://localhost:5001 |
+| Prometheus | http://localhost:9090/graph |
+| Grafana | http://localhost:3000/d/pet-adoption-ml-v2 |
+| ArgoCD UI | https://localhost:9443 |
+| Metrics Server | http://localhost:8081/metrics |
+| Dagshub | https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform |
 
 ---
 
@@ -797,4 +843,5 @@ After completing this setup:
 - Read `VIDEO_RECORDING_GUIDE.md` for demo instructions
 - Check `ARCHITECTURE_DIAGRAM.md` for system overview
 - Explore API at http://localhost:8000/docs
-- View experiments at http://localhost:5000
+- View experiments at http://localhost:5001
+- Check ArgoCD app status at https://localhost:9443

@@ -130,8 +130,10 @@ model = get_model("resnet18", pretrained=True)
 # Train with MLflow tracking
 python src/training/train.py --config configs/train_config.yaml
 
-# View experiments
-mlflow ui --port 5000
+# Start MLflow tracking server (port 5001)
+mlflow server --host 0.0.0.0 --port 5001 --backend-store-uri sqlite:///mlflow.db
+# UI: http://localhost:5001
+# Dagshub remote: https://dagshub.com/vishalvishal099/BinaryImageClassification_For_A_Pet_Adoption_Platform.mlflow
 ```
 
 **Logged Artifacts:**
